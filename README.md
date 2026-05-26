@@ -6,8 +6,7 @@ Sistema de monitoreo completo para una API REST de tareas (To-do list), construi
 
 ## 👤 Información del Estudiante
 
-- **Nombre:** [Tu nombre completo]
-- **Código:** [Tu código de estudiante]
+- **Nombre:** [Sariaht Eyleen Xiomara Ariza Vargas]
 - **Repositorio:** [URL del repositorio]
 - **Video:** [URL del video demostrativo]
 
