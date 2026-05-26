@@ -16,13 +16,13 @@ Sistema de monitoreo completo para una API REST de tareas (To-do list), construi
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   Docker Network                     │
-│                                                      │
-│  ┌──────────────┐    scraping     ┌───────────────┐  │
-│  │  Spring Boot │ ◄──────────── │  Prometheus   │  │
+│                   Docker Network                    │
+│                                                     │
+│  ┌──────────────┐    scraping    ┌───────────────┐  │
+│  │  Spring Boot │ ◄────────────  │  Prometheus   │  │
 │  │  Todo API    │                │  :9090        │  │
 │  │  :3000       │                └──────┬────────┘  │
-│  │  /actuator/  │                       │ datasource │
+│  │  /actuator/  │                       │ datasource│
 │  │  prometheus  │                ┌──────▼────────┐  │
 │  └──────────────┘                │   Grafana     │  │
 │                                  │   :3001       │  │
