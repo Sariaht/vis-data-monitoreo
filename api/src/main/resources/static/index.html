@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Todo Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --accent: #7c6dfa;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,109,250,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,109,250,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+  /* Header */
+  header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 48px; gap: 16px; flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #c084fc);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-family: var(--font-head); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .status-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); padding: 8px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* Stats row */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+  @media(max-width:700px){ .stats { grid-template-columns: repeat(2,1fr); } }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px;
+    transition: border-color .2s, transform .2s;
+  }
+  .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.purple { color: var(--accent2); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.red { color: var(--red); }
+
+  /* Main layout */
+  .main { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+  @media(max-width:900px){ .main { grid-template-columns: 1fr; } }
+
+  /* Panel */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+    font-family: var(--font-head); font-size: 13px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .panel-header span { color: var(--text); }
+
+  /* Form */
+  .form-area { padding: 20px 22px; border-bottom: 1px solid var(--border); }
+  .input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  input[type=text], select {
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text); font-family: var(--font-mono); font-size: 13px;
+    padding: 10px 14px; border-radius: 8px; outline: none;
+    transition: border-color .2s;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--accent); }
+  input[type=text].title-input { flex: 1; min-width: 180px; }
+  select { min-width: 110px; }
+  select option { background: var(--surface2); }
+  .btn {
+    padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+    transition: all .15s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-sm { padding: 5px 12px; font-size: 11px; border-radius: 6px; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent2); }
+  .btn-danger { background: transparent; border: 1px solid transparent; color: var(--red); }
+  .btn-danger:hover { border-color: var(--red); background: rgba(248,113,113,.08); }
+
+  /* Filter bar */
+  .filter-bar { display: flex; gap: 6px; padding: 14px 22px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .filter-btn { padding: 5px 14px; border-radius: 20px; font-size: 11px; font-family: var(--font-mono); cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--muted); transition: all .15s; }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Todo list */
+  .todo-list { padding: 12px; max-height: 480px; overflow-y: auto; }
+  .todo-list::-webkit-scrollbar { width: 4px; }
+  .todo-list::-webkit-scrollbar-track { background: transparent; }
+  .todo-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .todo-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 10px; margin-bottom: 6px;
+    border: 1px solid transparent; transition: all .15s; cursor: default;
+    animation: fadeIn .25s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .todo-item:hover { background: var(--surface2); border-color: var(--border); }
+  .todo-item.done { opacity: .5; }
+
+  .check-btn {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border2);
+    background: transparent; cursor: pointer; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; transition: all .15s; color: transparent; font-size: 12px;
+  }
+  .check-btn:hover { border-color: var(--green); color: var(--green); }
+  .todo-item.done .check-btn { background: var(--green); border-color: var(--green); color: #fff; }
+
+  .todo-content { flex: 1; min-width: 0; }
+  .todo-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .todo-item.done .todo-title { text-decoration: line-through; color: var(--muted); }
+  .todo-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+
+  .priority-badge {
+    font-size: 9px; text-transform: uppercase; letter-spacing: .08em;
+    padding: 2px 7px; border-radius: 4px; font-weight: 500;
+  }
+  .priority-badge.HIGH { background: rgba(248,113,113,.15); color: var(--red); }
+  .priority-badge.MEDIUM { background: rgba(251,191,36,.15); color: var(--amber); }
+  .priority-badge.LOW { background: rgba(52,211,153,.15); color: var(--green); }
+
+  .todo-id { font-size: 10px; color: var(--muted); }
+
+  .todo-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+  .todo-item:hover .todo-actions { opacity: 1; }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; }
+
+  /* Right panel — metrics */
+  .metrics-panel { display: flex; flex-direction: column; gap: 12px; }
+
+  .metric-item { padding: 16px 22px; }
+  .metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 6px; }
+  .metric-val { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--accent2); }
+  .metric-bar-bg { height: 3px; background: var(--border2); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .metric-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width .6s ease; }
+
+  .link-row { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .ext-link {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    text-decoration: none; color: var(--text); font-size: 12px; transition: all .15s;
+  }
+  .ext-link:hover { border-color: var(--accent); color: var(--accent2); }
+  .ext-link-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px;
+    padding: 12px 18px; font-size: 12px; color: var(--text);
+    transform: translateY(20px); opacity: 0; transition: all .25s;
+    pointer-events: none;
+  }
+  .toast.show { transform: none; opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      <div>
+        <div class="logo-text">Todo Monitor</div>
+        <div class="logo-sub">Prometheus + Grafana Stack</div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span>API running · localhost:3000</span>
+    </div>
+  </header>
+
+  <div class="stats" id="stats">
+    <div class="stat-card"><div class="stat-label">Total tareas</div><div class="stat-value purple" id="s-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Activas</div><div class="stat-value amber" id="s-active">—</div></div>
+    <div class="stat-card"><div class="stat-label">Completadas</div><div class="stat-value green" id="s-done">—</div></div>
+    <div class="stat-card"><div class="stat-label">Alta prioridad</div><div class="stat-value red" id="s-high">—</div></div>
+  </div>
+
+  <div class="main">
+    <!-- Left: task list -->
+    <div class="panel">
+      <div class="panel-header"><span>Tareas</span><span id="count-label">—</span></div>
+
+      <div class="form-area">
+        <div class="input-row">
+          <input type="text" class="title-input" id="new-title" placeholder="Nueva tarea..." />
+          <select id="new-priority">
+            <option value="MEDIUM">🟡 Media</option>
+            <option value="HIGH">🔴 Alta</option>
+            <option value="LOW">🟢 Baja</option>
+          </select>
+          <button class="btn btn-primary" onclick="createTodo()">+ Agregar</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all', this)">Todas</button>
+        <button class="filter-btn" onclick="setFilter('active', this)">Activas</button>
+        <button class="filter-btn" onclick="setFilter('done', this)">Completadas</button>
+        <button class="filter-btn" onclick="setFilter('HIGH', this)">🔴 Alta</button>
+        <button class="filter-btn" onclick="setFilter('MEDIUM', this)">🟡 Media</button>
+        <button class="filter-btn" onclick="setFilter('LOW', this)">🟢 Baja</button>
+      </div>
+
+      <div class="todo-list" id="todo-list">
+        <div class="empty-state"><div class="icon">◌</div><p>Cargando tareas...</p></div>
+      </div>
+    </div>
+
+    <!-- Right: metrics + links -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel metrics-panel">
+        <div class="panel-header"><span>Métricas en vivo</span></div>
+        <div class="metric-item">
+          <div class="metric-label">Ratio completado</div>
+          <div class="metric-val" id="m-ratio">—</div>
+          <div class="metric-bar-bg"><div class="metric-bar" id="m-bar" style="width:0%"></div></div>
+        </div>
+        <div class="metric-item" style="border-top:1px solid var(--border)">
+          <div class="metric-label">Por prioridad</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;font-size:12px" id="m-priority">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span>Servicios</span></div>
+        <div class="link-row">
+          <a class="ext-link" href="/actuator/prometheus" target="_blank">
+            <div class="ext-link-icon" style="background:#e6522c"></div>
+            Métricas Prometheus raw
+          </a>
+          <a class="ext-link" href="http://localhost:9090" target="_blank">
+            <div class="ext-link-icon" style="background:#e6522c"></div>
+            Prometheus UI
+          </a>
+          <a class="ext-link" href="http://localhost:3001" target="_blank">
+            <div class="ext-link-icon" style="background:#f46800"></div>
+            Grafana Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let todos = [];
+  let currentFilter = 'all';
+
+  async function api(path, method='GET', body=null) {
+    const opts = { method, headers: {'Content-Type':'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(path, opts);
+    return r.ok ? r.json() : null;
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  async function loadTodos() {
+    const data = await api('/api/todos');
+    if (data) { todos = data; render(); updateStats(); }
+  }
+
+  async function loadStats() {
+    const s = await api('/api/stats');
+    if (!s) return;
+    document.getElementById('s-total').textContent = s.total;
+    document.getElementById('s-active').textContent = s.active;
+    document.getElementById('s-done').textContent = s.completed;
+    document.getElementById('s-high').textContent = s.byPriority?.HIGH || 0;
+
+    const ratio = s.total > 0 ? Math.round(s.completed / s.total * 100) : 0;
+    document.getElementById('m-ratio').textContent = ratio + '%';
+    document.getElementById('m-bar').style.width = ratio + '%';
+
+    const bp = s.byPriority || {};
+    document.getElementById('m-priority').innerHTML = `
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--red)">🔴 Alta</span><span>${bp.HIGH||0}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--amber)">🟡 Media</span><span>${bp.MEDIUM||0}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--green)">🟢 Baja</span><span>${bp.LOW||0}</span></div>
+    `;
+  }
+
+  function filtered() {
+    if (currentFilter === 'all') return todos;
+    if (currentFilter === 'active') return todos.filter(t => !t.completed);
+    if (currentFilter === 'done') return todos.filter(t => t.completed);
+    return todos.filter(t => t.priority === currentFilter);
+  }
+
+  function render() {
+    const list = filtered();
+    document.getElementById('count-label').textContent = list.length + ' tareas';
+    const el = document.getElementById('todo-list');
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">◌</div><p>Sin tareas aquí</p></div>';
+      return;
+    }
+    el.innerHTML = list.map(t => `
+      <div class="todo-item ${t.completed ? 'done' : ''}" id="todo-${t.id}">
+        <button class="check-btn" onclick="complete(${t.id})" title="Completar">✓</button>
+        <div class="todo-content">
+          <div class="todo-title">${t.title}</div>
+          <div class="todo-meta">
+            <span class="priority-badge ${t.priority}">${t.priority}</span>
+            <span class="todo-id">#${t.id}</span>
+          </div>
+        </div>
+        <div class="todo-actions">
+          <button class="btn btn-sm btn-danger" onclick="remove(${t.id})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateStats() { loadStats(); }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  async function createTodo() {
+    const title = document.getElementById('new-title').value.trim();
+    const priority = document.getElementById('new-priority').value;
+    if (!title) { toast('Escribe un título primero'); return; }
+    const t = await api('/api/todos', 'POST', { title, priority });
+    if (t) { todos.unshift(t); render(); updateStats(); document.getElementById('new-title').value = ''; toast('✓ Tarea creada'); }
+  }
+
+  async function complete(id) {
+    const t = await api(`/api/todos/${id}/complete`, 'PATCH');
+    if (t) { const i = todos.findIndex(x => x.id === id); if(i>=0) todos[i] = t; render(); updateStats(); toast('✓ Completada'); }
+  }
+
+  async function remove(id) {
+    await api(`/api/todos/${id}`, 'DELETE');
+    todos = todos.filter(t => t.id !== id);
+    render(); updateStats(); toast('Tarea eliminada');
+  }
+
+  document.getElementById('new-title').addEventListener('keydown', e => { if(e.key==='Enter') createTodo(); });
+
+  loadTodos();
+  setInterval(loadTodos, 8000);
+  setInterval(loadStats, 5000);
+</script>
+</body>
+</html>

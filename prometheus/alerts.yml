@@ -1,0 +1,47 @@
+groups:
+  - name: todo-api-alerts
+    interval: 30s
+    rules:
+
+      # API down alert
+      - alert: ApiDown
+        expr: up{job="todo-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Todo API is down"
+          description: "The Todo API has been unreachable for more than 1 minute."
+
+      # High error rate (not found errors)
+      - alert: HighNotFoundRate
+        expr: rate(todo_not_found_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate of 404 Not Found errors"
+          description: "More than 0.5 not-found errors per second in the last 5 minutes."
+
+      # High latency alert
+      - alert: HighLatency
+        expr: |
+          rate(http_request_duration_seconds_sum{endpoint="slow"}[5m])
+          /
+          rate(http_request_duration_seconds_count{endpoint="slow"}[5m]) > 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency detected"
+          description: "Average response time for /api/slow endpoint exceeds 3 seconds."
+
+      # High request rate
+      - alert: HighRequestRate
+        expr: rate(http_server_requests_seconds_count[1m]) > 50
+        for: 2m
+        labels:
+          severity: info
+        annotations:
+          summary: "High request rate"
+          description: "The API is receiving more than 50 requests per second."
