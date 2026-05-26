@@ -8,7 +8,7 @@ Sistema de monitoreo completo para una API REST de tareas (To-do list), construi
 
 - **Nombre:** Sariaht Eyleen Xiomara Ariza Vargas
 - **Repositorio:** (https://github.com/Sariaht/vis-data-monitoreo)
-- **Video:** [URL del video demostrativo]
+- **Video:** https://youtu.be/cYTCBI-Sc2M
 
 ---
 
